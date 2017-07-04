@@ -9,7 +9,7 @@
     <% for (var url in urls ) {
       if( urls.hasOwnProperty(url)) {
     %>
-    <li><a target="_blank" href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a> shortened to <%= urls[url] %></li>
+    <li><%= urls[url] %> shortened to --> <a target="_blank" href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a></li>
     <% }} %>
   </ul>
   <form>
