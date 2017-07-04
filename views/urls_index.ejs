@@ -1,8 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>TinyApp</title>
 </head>
 <body>
-    <h1>TinyApp</h1>
+  <% include partials/_header %>
+  <h1>TinyApp</h1>
+  <ul>
+    <% for (var url in urls ) {
+      if( urls.hasOwnProperty(url)) {
+    %>
+    <li><a target="_blank" href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a> shortened to <%= urls[url] %></li>
+    <% }} %>
+  </ul>
+  <form>
+    <input type="button" value="Add New URL" onclick="window.location.href='/urls/new'" />
+  </form>
 </html>

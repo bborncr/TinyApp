@@ -10,27 +10,35 @@ app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 
+app.use(express.static('public'));
+
 // generate 6 character random string
 function generateRandomString() {
   return randomstring.generate(6);
 }
 
-var urlDatabase = {
+let urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
 app.get("/", (req, res) => {
-  res.render("urls_index");
+  res.redirect("/urls");
 });
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/urls", (req, res) => {
+  let templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
+});
+
 app.post("/urls", (req, res) => {
   console.log(req.body);
-  res.send("Ok");
+  urlDatabase[generateRandomString()] = req.body.longURL;
+  res.redirect("urls");
 });
 
 app.get("/urls/:id", (req, res) => {
