@@ -1,18 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <% include partials/_head %>
 </head>
 <body>
   <% include partials/_header %>
   <h1>TinyApp</h1>
-  <ul>
-    <% for (var url in urls ) {
+  <table class="table table-striped table-responsie">
+  <tr>
+    <th>Long URL</th>
+    <th>Short URL</th>
+  </tr>
+  <% for (var url in urls ) {
       if( urls.hasOwnProperty(url)) {
     %>
-    <li><%= urls[url] %> shortened to --> <a target="_blank" href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a></li>
-    <% }} %>
-  </ul>
+  <tr>
+    <td><%= urls[url] %></td>
+    <td><a target="_blank" href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a></td>
+  </tr>
+   <% }} %>
+</table>
   <form>
-    <input type="button" value="Add New URL" onclick="window.location.href='/urls/new'" />
+    <input type="button" class="btn btn-primary" value="Add New URL" onclick="window.location.href='/urls/new'" />
   </form>
 </html>
