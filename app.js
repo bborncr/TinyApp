@@ -10,7 +10,7 @@ app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.use(express.static('public'));
+app.use(express.static(__dirname + '/public'));
 
 // generate 6 character random string
 function generateRandomString() {
@@ -23,6 +23,7 @@ let urlDatabase = {
 };
 
 app.get("/", (req, res) => {
+  //res.render("index");
   res.redirect("/urls");
 });
 
