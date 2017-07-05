@@ -20,11 +20,11 @@
                 if( urls.hasOwnProperty(url)) {
               %>
             <tr>
-            <td><%= urls[url] %></td>
+            <td><a data-toggle="tooltip" title="<%= urls[url] %>" target="_blank" href="<%= urls[url] %>"><%= urls[url] %></a></td>
             <td><a target="_blank" href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a></td>
             <td class="text-center">
               <a data-toggle="tooltip" title="Delete Link" href="urls/delete/<%= url %>"><span class='glyphicon glyphicon-remove' style="color:red"></span></a>
-              <a href="urls/update/<%= url %>"><span class='glyphicon glyphicon-edit' style="color:green"></span></a>
+              <a data-toggle="tooltip" title="Update Link" href="urls/update/<%= url %>"><span class='glyphicon glyphicon-edit' style="color:green"></span></a>
               </td>
           </tr>
            <% }} %>
