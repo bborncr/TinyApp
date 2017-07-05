@@ -41,10 +41,24 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/update/:id", (req, res) => {
+  let templateVars = {
+    id: req.params.id,
+    url: urlDatabase[req.params.id]
+  };
+  res.render("urls_update", templateVars);
+});
+
 app.post("/urls", (req, res) => {
   console.log(req.body);
   urlDatabase[generateRandomString()] = req.body.longURL;
-  res.redirect("urls");
+  res.redirect("/urls");
+});
+
+app.post("/urls/update", (req, res) => {
+  console.log(req.body);
+  urlDatabase[req.body.id] = req.body.longURL;
+  res.redirect("/urls");
 });
 
 app.get("/urls/:id", (req, res) => {
