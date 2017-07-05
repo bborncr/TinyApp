@@ -75,6 +75,25 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+app.post("/register", (req, res) => {
+  const userID = generateRandomString();
+  console.log(userID);
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log(email, password);
+  if (email === "" || password === ""){
+    res.send("400 Bad Request")
+  } else {
+    users[userID] = {
+      id: userID,
+      email: email,
+      password: password
+    }
+    res.cookie("username", userID);
+    res.redirect("/urls");
+  }
+});
+
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
