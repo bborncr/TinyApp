@@ -49,6 +49,9 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   // console.log(req.body);
+  if (req.body.username === ""){
+    res.redirect("/login");
+  }
   res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
