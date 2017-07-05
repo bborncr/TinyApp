@@ -26,12 +26,39 @@ let urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  //res.render("index");
+  if (req.cookies["username"]){
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+
+});
+
+app.get('/logout', function(req, res){
+  res.clearCookie('username');
+  res.redirect('/');
+});
+
+app.get("/login", (req, res) => {
+  let templateVars = {
+    username: req.cookies["username"]
+  }
+  res.render("login", templateVars);
+  //res.redirect("/urls");
+});
+
+app.post("/login", (req, res) => {
+  // console.log(req.body);
+  res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/delete/:id", (req, res) => {
@@ -40,14 +67,18 @@ app.get("/urls/delete/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/update/:id", (req, res) => {
   let templateVars = {
     id: req.params.id,
-    url: urlDatabase[req.params.id]
+    url: urlDatabase[req.params.id],
+    username: req.cookies["username"]
   };
   res.render("urls_update", templateVars);
 });

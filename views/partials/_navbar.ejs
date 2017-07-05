@@ -1,8 +1,10 @@
 <div class="header clearfix">
         <nav>
           <ul class="nav nav-pills pull-right">
-            <li role="presentation" class="active"><a href="/">Home</a></li>
-            <li role="presentation"><a href="#">Login</a></li>
+            <li id="navHome" role="presentation" class="active"><a href="/">Home</a></li>
+            <li id="navLogin" style="visibility: collapse;" role="presentation"><a href="/login">Login</a></li>
+            <li id="navUsername" style="visibility: visible;" role="presentation"><a href="#"><%= username %></a></li>
+            <li id="navLogout" style="visibility: collapse;" role="presentation"><a href="/logout">Logout</a></li>
           </ul>
         </nav>
         <h3 class="text-muted">TinyApp</h3>
