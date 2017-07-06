@@ -7,7 +7,6 @@ const randomstring = require("randomstring");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 
-// set the view engine to ejs
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -34,21 +33,47 @@ function findUser(username, password){
   return undefined;
 }
 
+// returns all the users' urls
+function urlsForUser(id){
+  let userUrls = {};
+  for (url in urlDatabase){
+    if (id === urlDatabase[url].userID){
+      userUrls[urlDatabase[url].shortUrl] = urlDatabase[url].longUrl;
+    }
+  }
+  return userUrls;
+}
+
 let urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    shortUrl: "b2xVn2",
+    longUrl: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  "9sm5xK": {
+    shortUrl: "9sm5xK",
+    longUrl: "http://www.google.com",
+    userID: "user2RandomID"
+  }
 };
+
+let userUrls = {};
+
+// let userUrls = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 
 const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "12345"
   },
  "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "12345"
   }
 };
 
@@ -73,7 +98,6 @@ app.get('/logout', function(req, res){
 });
 
 app.get("/login", (req, res) => {
- // console.log('Users: ', users);
  let templateVars = {
       userObject: {
         id: "",
@@ -108,7 +132,7 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (email === "" || password === ""){
-    res.send("400 Bad Request")
+    res.send("400 Bad Request");
   } else {
     users[userID] = {
       id: userID,
@@ -132,7 +156,6 @@ app.get("/urls/new", (req, res) => {
   } else {
     res.redirect("/login");
   }
-
 });
 
 app.get("/urls/delete/:id", (req, res) => {
@@ -148,11 +171,12 @@ app.get("/urls/delete/:id", (req, res) => {
 app.get("/urls", (req, res) => {
   let loggedIn = !!req.session.userId;
   if (loggedIn){
-
+  userUrls = urlsForUser(req.session.userId.id);
   let templateVars = {
-    urls: urlDatabase,
+    urls: userUrls,
     userObject: req.session.userId
   };
+  // console.log("TEMPLATEVARS: ", templateVars);
   res.render("urls_index", templateVars);
   } else {
     res.redirect("/login");
@@ -164,7 +188,7 @@ app.get("/urls/update/:id", (req, res) => {
   if (loggedIn){
   let templateVars = {
     id: req.params.id,
-    url: urlDatabase[req.params.id],
+    url: urlDatabase[req.params.id].longUrl,
     userObject: req.session.userId
   };
   res.render("urls_update", templateVars);
@@ -176,8 +200,13 @@ app.get("/urls/update/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   let loggedIn = !!req.session.userId;
   if (loggedIn){
-  urlDatabase[generateRandomString()] = req.body.longURL;
-  res.redirect("/urls");
+    newShortUrl = generateRandomString();
+    urlDatabase[newShortUrl] = {
+      shortUrl: newShortUrl,
+      longUrl: req.body.longURL,
+      userID: req.session.userId.id
+    }
+    res.redirect("/urls");
   } else {
     res.redirect("/login");
   }
@@ -186,7 +215,7 @@ app.post("/urls", (req, res) => {
 app.post("/urls/update", (req, res) => {
   let loggedIn = !!req.session.userId;
   if (loggedIn){
-  urlDatabase[req.body.id] = req.body.longURL;
+  urlDatabase[req.body.id].longUrl = req.body.longURL;
   res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -204,7 +233,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longUrl;
   res.redirect(longURL);
 });
 
