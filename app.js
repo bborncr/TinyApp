@@ -34,18 +34,6 @@ function findUser(username, password){
   return undefined;
 }
 
-
-function validateUser(userId) {
-  for (user in users){
-    //if userid = userid return true else return false
-  }
-  /*if (users.find((user) => user.id == userId)) {
-    return true;
-  } else {
-    return false;
-  }*/
-}
-
 let urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -65,18 +53,18 @@ const users = {
 };
 
 app.get("/", (req, res) => {
-  if (req.session.userId === undefined){
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
     let templateVars = {
       userObject: {
         id: "",
         email: ""
       }
     }
-    res.redirect("/login");
-  } else {
     res.redirect("/urls");
+  } else {
+    res.redirect("/login");
   }
-
 });
 
 app.get('/logout', function(req, res){
@@ -134,50 +122,85 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  let templateVars = {
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
+    let templateVars = {
     urls: urlDatabase,
     userObject: req.session.userId
-  };
-  res.render("urls_new", templateVars);
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
+
 });
 
 app.get("/urls/delete/:id", (req, res) => {
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
   let deletedURL = delete urlDatabase[req.params.id];
   res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls", (req, res) => {
-      console.log(req.session.userId);
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
+
   let templateVars = {
     urls: urlDatabase,
     userObject: req.session.userId
   };
   res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/update/:id", (req, res) => {
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
   let templateVars = {
     id: req.params.id,
     url: urlDatabase[req.params.id],
     userObject: req.session.userId
   };
   res.render("urls_update", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.post("/urls", (req, res) => {
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
   urlDatabase[generateRandomString()] = req.body.longURL;
   res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.post("/urls/update", (req, res) => {
-  // console.log(req.body);
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
   urlDatabase[req.body.id] = req.body.longURL;
   res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
+  let loggedIn = !!req.session.userId;
+  if (loggedIn){
   let templateVars = { shortURL: req.params.id };
   res.render("urls_show", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
