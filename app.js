@@ -23,10 +23,14 @@ function generateRandomString() {
   return randomstring.generate(6);
 }
 
+
+//bcrypt.compareSync(users[user].password, password);
+
 // returns user object or undefined if not found
 function findUser(username, password){
   for (user in users){
-    if (username === users[user].email && password === users[user].password){
+
+    if (username === users[user].email && bcrypt.compareSync(password, users[user].password)){
       return users[user];
     }
   }
@@ -143,7 +147,7 @@ app.post("/login", (req, res) => {
 app.post("/register", (req, res) => {
   const userID = generateRandomString();
   const email = req.body.email;
-  const password = req.body.password;
+  const password = bcrypt.hashSync(req.body.password, 10);
   if (email === "" || password === ""){
     res.send("400 Bad Request");
   } else {
