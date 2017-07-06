@@ -4,14 +4,18 @@ const app = express();
 const bodyParser = require("body-parser");
 const PORT = process.env.PORT || 8080;
 const randomstring = require("randomstring");
-const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcrypt');
 
 // set the view engine to ejs
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.use(cookieParser());
+app.use(cookieSession({
+  secret: 'blackcars',
+  maxAge: 24 * 60 * 60 * 1000
+}));
 
 app.use(express.static(__dirname + '/public'));
 
@@ -28,6 +32,18 @@ function findUser(username, password){
     }
   }
   return undefined;
+}
+
+
+function validateUser(userId) {
+  for (user in users){
+    //if userid = userid return true else return false
+  }
+  /*if (users.find((user) => user.id == userId)) {
+    return true;
+  } else {
+    return false;
+  }*/
 }
 
 let urlDatabase = {
@@ -49,11 +65,7 @@ const users = {
 };
 
 app.get("/", (req, res) => {
-  // console.log(req.cookies.user_id);
-  // res.cookie("user_id", "userRandomID");
-  // console.log(users);
-  // console.log(req.cookies);
-  if (req.cookies.user_id === undefined){
+  if (req.session.userId === undefined){
     let templateVars = {
       userObject: {
         id: "",
@@ -68,7 +80,7 @@ app.get("/", (req, res) => {
 });
 
 app.get('/logout', function(req, res){
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/login');
 });
 
@@ -94,27 +106,19 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // console.log(req.body);
-  // console.log(users);
-  if (req.body.email === ""){
-    res.redirect("/login");
-  }
-  let userObject = findUser(req.body.email, req.body.password);
-  // console.log('userObject: ', wholeUser);
-  if (userObject === undefined){
+  const user = findUser(req.body.email, req.body.password);
+  if (user === undefined){
     res.redirect("/login");
   } else {
-    res.cookie("user_id", userObject);
+    req.session.userId = user;
     res.redirect("/urls");
   }
 });
 
 app.post("/register", (req, res) => {
   const userID = generateRandomString();
-  // console.log(userID);
   const email = req.body.email;
   const password = req.body.password;
-  // console.log(email, password);
   if (email === "" || password === ""){
     res.send("400 Bad Request")
   } else {
@@ -123,8 +127,8 @@ app.post("/register", (req, res) => {
       email: email,
       password: password
     }
-    // console.log(users);
-    res.cookie("user_id", users[userID]);
+    console.log(users);
+    req.session.userId = users[userID];
     res.redirect("/urls");
   }
 });
@@ -132,7 +136,7 @@ app.post("/register", (req, res) => {
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
-    userObject: req.cookies.user_id
+    userObject: req.session.userId
   };
   res.render("urls_new", templateVars);
 });
@@ -143,12 +147,11 @@ app.get("/urls/delete/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-      console.log(req.cookies.user_id);
+      console.log(req.session.userId);
   let templateVars = {
     urls: urlDatabase,
-    userObject: req.cookies.user_id
+    userObject: req.session.userId
   };
-  // console.log("templateVars: ", templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -156,7 +159,7 @@ app.get("/urls/update/:id", (req, res) => {
   let templateVars = {
     id: req.params.id,
     url: urlDatabase[req.params.id],
-    userObject: req.cookies.user_id
+    userObject: req.session.userId
   };
   res.render("urls_update", templateVars);
 });
