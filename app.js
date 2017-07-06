@@ -44,6 +44,19 @@ function urlsForUser(id){
   return userUrls;
 }
 
+// returns true if url belongs to user else false
+function isUserUrl(urlid, userid){
+  console.log("URLID: ", urlid);
+  console.log("USERID: ", userid);
+  console.log(urlDatabase[urlid].userID);
+  if(urlDatabase[urlid].userID === userid){
+    return true;
+  } else {
+    return false;
+  }
+}
+
+
 let urlDatabase = {
   "b2xVn2": {
     shortUrl: "b2xVn2",
@@ -160,11 +173,12 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/delete/:id", (req, res) => {
   let loggedIn = !!req.session.userId;
-  if (loggedIn){
+   let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
+  if (loggedIn && isMyUrl){
   let deletedURL = delete urlDatabase[req.params.id];
   res.redirect("/urls");
   } else {
-    res.redirect("/login");
+    res.redirect("/urls");
   }
 });
 
@@ -185,7 +199,8 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/update/:id", (req, res) => {
   let loggedIn = !!req.session.userId;
-  if (loggedIn){
+  let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
+  if (loggedIn && isMyUrl){
   let templateVars = {
     id: req.params.id,
     url: urlDatabase[req.params.id].longUrl,
@@ -193,7 +208,7 @@ app.get("/urls/update/:id", (req, res) => {
   };
   res.render("urls_update", templateVars);
   } else {
-    res.redirect("/login");
+    res.redirect("/urls");
   }
 });
 
