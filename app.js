@@ -18,13 +18,38 @@ app.use(cookieSession({
 
 app.use(express.static(__dirname + '/public'));
 
+let urlDatabase = {
+  "b2xVn2": {
+    shortUrl: "b2xVn2",
+    longUrl: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  "9sm5xK": {
+    shortUrl: "9sm5xK",
+    longUrl: "http://www.google.com",
+    userID: "user2RandomID"
+  }
+};
+
+let userUrls = {};
+
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "12345"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "12345"
+  }
+};
+
 // generate 6 character random string
 function generateRandomString() {
   return randomstring.generate(6);
 }
-
-
-//bcrypt.compareSync(users[user].password, password);
 
 // returns user object or undefined if not found
 function findUser(username, password){
@@ -50,9 +75,6 @@ function urlsForUser(id){
 
 // returns true if url belongs to user else false
 function isUserUrl(urlid, userid){
-  console.log("URLID: ", urlid);
-  console.log("USERID: ", userid);
-  console.log(urlDatabase[urlid].userID);
   if(urlDatabase[urlid].userID === userid){
     return true;
   } else {
@@ -60,49 +82,15 @@ function isUserUrl(urlid, userid){
   }
 }
 
-
-let urlDatabase = {
-  "b2xVn2": {
-    shortUrl: "b2xVn2",
-    longUrl: "http://www.lighthouselabs.ca",
-    userID: "userRandomID"
-  },
-  "9sm5xK": {
-    shortUrl: "9sm5xK",
-    longUrl: "http://www.google.com",
-    userID: "user2RandomID"
-  }
-};
-
-let userUrls = {};
-
-// let userUrls = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
-
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "12345"
-  },
- "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "12345"
-  }
-};
-
 app.get("/", (req, res) => {
-  let loggedIn = !!req.session.userId;
+  let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     let templateVars = {
       userObject: {
         id: "",
         email: ""
       }
-    }
+    };
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -115,22 +103,22 @@ app.get('/logout', function(req, res){
 });
 
 app.get("/login", (req, res) => {
- let templateVars = {
-      userObject: {
-        id: "",
-        email: ""
-      }
+  let templateVars = {
+    userObject: {
+      id: "",
+      email: ""
     }
+  };
   res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
   let templateVars = {
-      userObject: {
-        id: "",
-        email: ""
-      }
+    userObject: {
+      id: "",
+      email: ""
     }
+  };
   res.render("register", templateVars);
 });
 
@@ -155,19 +143,18 @@ app.post("/register", (req, res) => {
       id: userID,
       email: email,
       password: password
-    }
-    console.log(users);
+    };
     req.session.userId = users[userID];
     res.redirect("/urls");
   }
 });
 
 app.get("/urls/new", (req, res) => {
-  let loggedIn = !!req.session.userId;
+  let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     let templateVars = {
-    urls: urlDatabase,
-    userObject: req.session.userId
+      urls: urlDatabase,
+      userObject: req.session.userId
     };
     res.render("urls_new", templateVars);
   } else {
@@ -176,55 +163,54 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/delete/:id", (req, res) => {
-  let loggedIn = !!req.session.userId;
-   let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
+  let loggedIn = Boolean(req.session.userId);
+  let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
   if (loggedIn && isMyUrl){
-  let deletedURL = delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+    let deletedURL = delete urlDatabase[req.params.id];
+    res.redirect("/urls");
   } else {
     res.redirect("/urls");
   }
 });
 
 app.get("/urls", (req, res) => {
-  let loggedIn = !!req.session.userId;
+  let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
-  userUrls = urlsForUser(req.session.userId.id);
-  let templateVars = {
-    urls: userUrls,
-    userObject: req.session.userId
-  };
-  // console.log("TEMPLATEVARS: ", templateVars);
-  res.render("urls_index", templateVars);
+    userUrls = urlsForUser(req.session.userId.id);
+    let templateVars = {
+      urls: userUrls,
+      userObject: req.session.userId
+    };
+    res.render("urls_index", templateVars);
   } else {
     res.redirect("/login");
   }
 });
 
 app.get("/urls/update/:id", (req, res) => {
-  let loggedIn = !!req.session.userId;
+  let loggedIn = Boolean(req.session.userId);
   let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
   if (loggedIn && isMyUrl){
-  let templateVars = {
-    id: req.params.id,
-    url: urlDatabase[req.params.id].longUrl,
-    userObject: req.session.userId
-  };
-  res.render("urls_update", templateVars);
+    let templateVars = {
+      id: req.params.id,
+      url: urlDatabase[req.params.id].longUrl,
+      userObject: req.session.userId
+    };
+    res.render("urls_update", templateVars);
   } else {
     res.redirect("/urls");
   }
 });
 
 app.post("/urls", (req, res) => {
-  let loggedIn = !!req.session.userId;
+  let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     newShortUrl = generateRandomString();
     urlDatabase[newShortUrl] = {
       shortUrl: newShortUrl,
       longUrl: req.body.longURL,
       userID: req.session.userId.id
-    }
+    };
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -232,20 +218,20 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/update", (req, res) => {
-  let loggedIn = !!req.session.userId;
+  let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
-  urlDatabase[req.body.id].longUrl = req.body.longURL;
-  res.redirect("/urls");
+    urlDatabase[req.body.id].longUrl = req.body.longURL;
+    res.redirect("/urls");
   } else {
     res.redirect("/login");
   }
 });
 
 app.get("/urls/:id", (req, res) => {
-  let loggedIn = !!req.session.userId;
+  let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
-  let templateVars = { shortURL: req.params.id };
-  res.render("urls_show", templateVars);
+    let templateVars = { shortURL: req.params.id };
+    res.render("urls_show", templateVars);
   } else {
     res.redirect("/login");
   }

@@ -17,14 +17,14 @@
           </tr>
           <tr>
             <td><%= url %></td>
-            <td>http://localhost:8080/u/<%= id %></td>
+            <td>http://192.168.4.89:8080/u/<%= id %></td>
           </tr>
         </table>
         <form action="/urls/update" method="POST">
           <div class="form-group">
             <label for="longURL">Enter New Long URL</label>
             <input type="hidden" name="id" value="<%= id %>">
-            <input class="form-control" id="longURL" type="text" name="longURL" placeholder="http://">
+            <input class="form-control wantFocus" id="longURL" type="text" name="longURL" placeholder="http://">
             <br>
             <button type="submit" class="btn btn-primary">Update URL</button>
           </div>
