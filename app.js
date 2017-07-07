@@ -1,4 +1,4 @@
-
+// CONSTANTS
 const express = require('express');
 const app = express();
 const bodyParser = require("body-parser");
@@ -18,33 +18,43 @@ app.use(cookieSession({
 
 app.use(express.static(__dirname + '/public'));
 
-let urlDatabase = {
-  "b2xVn2": {
-    shortUrl: "b2xVn2",
-    longUrl: "http://www.lighthouselabs.ca",
-    userID: "userRandomID"
-  },
-  "9sm5xK": {
-    shortUrl: "9sm5xK",
-    longUrl: "http://www.google.com",
-    userID: "user2RandomID"
-  }
-};
+// // URL database example for reference -- same as userUrls
+// let urlDatabase = {
+//   "b2xVn2": {
+//     shortUrl: "b2xVn2",
+//     longUrl: "http://www.lighthouselabs.ca",
+//     userID: "userRandomID",
+//     date: 0,
+//     hits: 0
+//   },
+//   "9sm5xK": {
+//     shortUrl: "9sm5xK",
+//     longUrl: "http://www.google.com",
+//     userID: "user2RandomID",
+//     date: 0,
+//     hits: 0
+//   }
+// };
 
+// user database object for reference
+// let users = {
+//   "userRandomID": {
+//     id: "userRandomID",
+//     email: "user@example.com",
+//     password: "12345"
+//   },
+//   "user2RandomID": {
+//     id: "user2RandomID",
+//     email: "user2@example.com",
+//     password: "12345"
+//   }
+// };
+
+let urlDatabase = {};
 let userUrls = {};
+let users = {};
 
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "12345"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "12345"
-  }
-};
+// HELPER FUNCTIONS
 
 // generate 6 character random string
 function generateRandomString() {
@@ -62,12 +72,12 @@ function findUser(username, password){
   return undefined;
 }
 
-// returns all the users' urls
+// returns all of the users' urls
 function urlsForUser(id){
   let userUrls = {};
   for (url in urlDatabase){
     if (id === urlDatabase[url].userID){
-      userUrls[urlDatabase[url].shortUrl] = urlDatabase[url].longUrl;
+      userUrls[url] = urlDatabase[url];
     }
   }
   return userUrls;
@@ -82,6 +92,7 @@ function isUserUrl(urlid, userid){
   }
 }
 
+// ENDPOINTS
 app.get("/", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
@@ -162,7 +173,7 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-app.get("/urls/delete/:id", (req, res) => {
+app.get("/urls/:id/delete", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
   if (loggedIn && isMyUrl){
@@ -177,6 +188,7 @@ app.get("/urls", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     userUrls = urlsForUser(req.session.userId.id);
+    console.log(userUrls);
     let templateVars = {
       urls: userUrls,
       userObject: req.session.userId
@@ -187,7 +199,7 @@ app.get("/urls", (req, res) => {
   }
 });
 
-app.get("/urls/update/:id", (req, res) => {
+app.get("/urls/:id/update", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
   if (loggedIn && isMyUrl){
@@ -203,13 +215,16 @@ app.get("/urls/update/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  let timeInMs = Date.now();
   let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     newShortUrl = generateRandomString();
     urlDatabase[newShortUrl] = {
       shortUrl: newShortUrl,
       longUrl: req.body.longURL,
-      userID: req.session.userId.id
+      userID: req.session.userId.id,
+      date: timeInMs,
+      hits: 0
     };
     res.redirect("/urls");
   } else {
@@ -221,6 +236,7 @@ app.post("/urls/update", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     urlDatabase[req.body.id].longUrl = req.body.longURL;
+    urlDatabase[req.body.id].date = Date.now();
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -238,7 +254,9 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
+  console.log(userUrls);
   let longURL = urlDatabase[req.params.shortURL].longUrl;
+  urlDatabase[req.params.shortURL].hits++;
   res.redirect(longURL);
 });
 
