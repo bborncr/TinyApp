@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 8080;
 const randomstring = require("randomstring");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const dateFormat = require('dateformat');
 
 app.set('view engine', 'ejs');
 
@@ -24,14 +25,14 @@ app.use(express.static(__dirname + '/public'));
 //     shortUrl: "b2xVn2",
 //     longUrl: "http://www.lighthouselabs.ca",
 //     userID: "userRandomID",
-//     date: 0,
+//     date: "",
 //     hits: 0
 //   },
 //   "9sm5xK": {
 //     shortUrl: "9sm5xK",
 //     longUrl: "http://www.google.com",
 //     userID: "user2RandomID",
-//     date: 0,
+//     date: "",
 //     hits: 0
 //   }
 // };
@@ -85,11 +86,22 @@ function urlsForUser(id){
 
 // returns true if url belongs to user else false
 function isUserUrl(urlid, userid){
-  if(urlDatabase[urlid].userID === userid){
+  if (urlDatabase[urlid].userID === userid){
     return true;
   } else {
     return false;
   }
+}
+
+// returns true if url exists in urlDatabase
+function urlExists(id){
+  for (url in urlDatabase){
+    console.log(urlDatabase[url].shortUrl);
+    if (urlDatabase[url].shortUrl === id){
+      return true;
+    }
+  }
+  return false;
 }
 
 // ENDPOINTS
@@ -176,7 +188,8 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id/delete", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
-  if (loggedIn && isMyUrl){
+  let urlIsValid = urlExists(req.params.id);
+  if (loggedIn && isMyUrl && urlIsValid){
     let deletedURL = delete urlDatabase[req.params.id];
     res.redirect("/urls");
   } else {
@@ -188,7 +201,6 @@ app.get("/urls", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     userUrls = urlsForUser(req.session.userId.id);
-    console.log(userUrls);
     let templateVars = {
       urls: userUrls,
       userObject: req.session.userId
@@ -215,7 +227,7 @@ app.get("/urls/:id/update", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  let timeInMs = Date.now();
+  let date = dateFormat(new Date(), "mmmm d, yyyy");
   let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     newShortUrl = generateRandomString();
@@ -223,7 +235,7 @@ app.post("/urls", (req, res) => {
       shortUrl: newShortUrl,
       longUrl: req.body.longURL,
       userID: req.session.userId.id,
-      date: timeInMs,
+      date: date,
       hits: 0
     };
     res.redirect("/urls");
@@ -236,7 +248,7 @@ app.post("/urls/update", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
   if (loggedIn){
     urlDatabase[req.body.id].longUrl = req.body.longURL;
-    urlDatabase[req.body.id].date = Date.now();
+    urlDatabase[req.body.id].date = dateFormat(new Date(), "mmmm d, yyyy");
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -254,10 +266,23 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  console.log(userUrls);
-  let longURL = urlDatabase[req.params.shortURL].longUrl;
-  urlDatabase[req.params.shortURL].hits++;
-  res.redirect(longURL);
+  let urlIsValid = urlExists(req.params.shortURL);
+  if (urlIsValid){
+    let longURL = urlDatabase[req.params.shortURL].longUrl;
+    // increment shortURL hits
+    urlDatabase[req.params.shortURL].hits++;
+    res.redirect(longURL);
+  } else {
+    let templateVars = {
+      message: "Shortened URL does not exist.",
+      userObject: {
+      id: "",
+      email: ""
+    }
+  };
+  res.render("error", templateVars);
+  }
+
 });
 
 app.listen(PORT);

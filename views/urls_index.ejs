@@ -21,10 +21,10 @@
                 if( urls.hasOwnProperty(url)) {
               %>
             <tr>
-            <td class="text-center"><%= new Date(urls[url].date) %></td>
+            <td class="text-center"><%= urls[url].date %></td>
             <td class="text-center"><%= urls[url].hits %></td>
             <td><a data-toggle="tooltip" title="<%= urls[url].longUrl %>" target="_blank" href="<%= urls[url].longUrl %>"><%= urls[url].longUrl %></a></td>
-            <td><a target="_blank" href="http://192.168.4.89:8080/u/<%= url %>">http://192.168.4.89:8080/u/<%= url %></a></td>
+            <td><a target="_blank" href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a></td>
             <td class="text-center">
               <a data-toggle="tooltip" title="Delete Link" href="urls/<%= url %>/delete"><span class='glyphicon glyphicon-remove' style="color:red"></span></a>
               <a data-toggle="tooltip" title="Update Link" href="urls/<%= url %>/update"><span class='glyphicon glyphicon-edit' style="color:green"></span></a>
