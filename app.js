@@ -111,7 +111,8 @@ app.get("/", (req, res) => {
     let templateVars = {
       userObject: {
         id: "",
-        email: ""
+        email: "",
+        message: ""
       }
     };
     res.redirect("/urls");
@@ -126,29 +127,43 @@ app.get('/logout', function(req, res){
 });
 
 app.get("/login", (req, res) => {
-  let templateVars = {
-    userObject: {
-      id: "",
-      email: ""
-    }
-  };
-  res.render("login", templateVars);
+  let loggedIn = Boolean(req.session.userId);
+  if(!loggedIn){
+    let templateVars = {
+      userObject: {
+        id: "",
+        email: ""
+      }
+    };
+    res.render("login", templateVars);
+    return;
+  } else {
+    res.redirect("/");
+  }
 });
 
 app.get("/register", (req, res) => {
-  let templateVars = {
-    userObject: {
-      id: "",
-      email: ""
-    }
-  };
-  res.render("register", templateVars);
+  let loggedIn = Boolean(req.session.userId);
+  if(loggedIn){
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      userObject: {
+        id: "",
+        email: ""
+      }
+    };
+    res.render("register", templateVars);
+  }
 });
 
 app.post("/login", (req, res) => {
   const user = findUser(req.body.email, req.body.password);
   if (user === undefined){
-    res.redirect("/login");
+    let templateVars = {
+      message: "Access Denied: User or password is incorrect or does not exist"
+    };
+    res.render("error", templateVars);
   } else {
     req.session.userId = user;
     res.redirect("/urls");
@@ -156,12 +171,17 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userID = generateRandomString();
   const email = req.body.email;
-  const password = bcrypt.hashSync(req.body.password, 10);
+  const password = req.body.password;
   if (email === "" || password === ""){
-    res.send("400 Bad Request");
+    let templateVars = {
+      message: "Email or Password empty"
+    };
+    res.render("error", templateVars);
+    return;
   } else {
+    const encryptedPassword = bcrypt.hashSync(req.body.password, 10);
+    const userID = generateRandomString();
     users[userID] = {
       id: userID,
       email: email,
@@ -187,13 +207,33 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id/delete", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
-  let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
-  let urlIsValid = urlExists(req.params.id);
-  if (loggedIn && isMyUrl && urlIsValid){
-    let deletedURL = delete urlDatabase[req.params.id];
-    res.redirect("/urls");
-  } else {
-    res.redirect("/urls");
+  if(!loggedIn){
+    let templateVars = {
+      message: "Access Denied: Not Logged In"
+    };
+    res.render("error", templateVars);
+    return;
+  } else if(loggedIn){
+    let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
+    if(!isMyUrl){
+      let templateVars = {
+        message: "Access Denied: Url Not Found"
+      };
+      res.render("error", templateVars);
+      return;
+    } else if(isMyUrl){
+      let urlIsValid = urlExists(req.params.id);
+      if(!urlIsValid){
+        let templateVars = {
+          message: "URL does not exist"
+        };
+        res.render("error", templateVars);
+        return;
+      } else {
+        let deletedURL = delete urlDatabase[req.params.id];
+        res.redirect("/urls");
+      }
+    }
   }
 });
 
@@ -211,25 +251,52 @@ app.get("/urls", (req, res) => {
   }
 });
 
-app.get("/urls/:id/update", (req, res) => {
+app.get("/urls/:id", (req, res) => {
   let loggedIn = Boolean(req.session.userId);
-  let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
-  if (loggedIn && isMyUrl){
+  if(!loggedIn){
     let templateVars = {
-      id: req.params.id,
-      url: urlDatabase[req.params.id].longUrl,
-      userObject: req.session.userId
+      message: "Access Denied: Not Logged In"
     };
-    res.render("urls_update", templateVars);
-  } else {
-    res.redirect("/urls");
+    res.render("error", templateVars);
+    return;
+  } else if (loggedIn){
+    let isMyUrl = isUserUrl(req.params.id, req.session.userId.id);
+    if(!isMyUrl){
+      let templateVars = {
+        message: "Access Denied: Url Not Found"
+      };
+      res.render("error", templateVars);
+      return;
+    } else if (isMyUrl){
+      let urlIsValid = urlExists(req.params.id);
+      if (!urlIsValid){
+        let templateVars = {
+          message: "URL does not exist"
+        };
+        res.render("error", templateVars);
+        return;
+      } else {
+        let templateVars = {
+          id: req.params.id,
+          url: urlDatabase[req.params.id].longUrl,
+          userObject: req.session.userId
+        };
+        res.render("urls_update", templateVars);
+      }
+    }
   }
 });
 
 app.post("/urls", (req, res) => {
   let date = dateFormat(new Date(), "mmmm d, yyyy");
   let loggedIn = Boolean(req.session.userId);
-  if (loggedIn){
+  if (!loggedIn){
+    let templateVars = {
+      message: "Access Denied: Not Logged In"
+    };
+    res.render("error", templateVars);
+    return;
+  } else if (loggedIn){
     newShortUrl = generateRandomString();
     urlDatabase[newShortUrl] = {
       shortUrl: newShortUrl,
@@ -267,22 +334,18 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   let urlIsValid = urlExists(req.params.shortURL);
-  if (urlIsValid){
+  if(!urlIsValid){
+    let templateVars = {
+      message: "Shortened URL does not exist"
+    };
+    res.render("error", templateVars);
+    return;
+  } else {
     let longURL = urlDatabase[req.params.shortURL].longUrl;
     // increment shortURL hits
     urlDatabase[req.params.shortURL].hits++;
     res.redirect(longURL);
-  } else {
-    let templateVars = {
-      message: "Shortened URL does not exist.",
-      userObject: {
-      id: "",
-      email: ""
-    }
-  };
-  res.render("error", templateVars);
   }
-
 });
 
 app.listen(PORT);
