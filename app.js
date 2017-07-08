@@ -65,7 +65,6 @@ function generateRandomString() {
 // returns user object or undefined if not found
 function findUser(username, password){
   for (user in users){
-
     if (username === users[user].email && bcrypt.compareSync(password, users[user].password)){
       return users[user];
     }
@@ -96,7 +95,6 @@ function isUserUrl(urlid, userid){
 // returns true if url exists in urlDatabase
 function urlExists(id){
   for (url in urlDatabase){
-    console.log(urlDatabase[url].shortUrl);
     if (urlDatabase[url].shortUrl === id){
       return true;
     }
@@ -164,6 +162,7 @@ app.post("/login", (req, res) => {
       message: "Access Denied: User or password is incorrect or does not exist"
     };
     res.render("error", templateVars);
+    return;
   } else {
     req.session.userId = user;
     res.redirect("/urls");
@@ -185,7 +184,7 @@ app.post("/register", (req, res) => {
     users[userID] = {
       id: userID,
       email: email,
-      password: password
+      password: encryptedPassword
     };
     req.session.userId = users[userID];
     res.redirect("/urls");
